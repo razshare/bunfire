@@ -4,6 +4,7 @@
 /.dom
 /.ssr
 *.so
+*.so.o
 logs
 _.log
 npm-debug.log_
