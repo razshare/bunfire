@@ -1,8 +1,9 @@
+import { dlopen, suffix } from "bun:ffi";
+import { warn } from "console";
 import { exists, mkdir, rm } from "fs/promises";
 import { dirname } from "path";
 import svelte from "rollup-plugin-svelte";
 import * as vite from "vite";
-import { dlopen, FFIType, suffix } from "bun:ffi";
 
 /**
  *
@@ -146,13 +147,15 @@ function findRequestPath(request) {
 /**
  * Load and compile a svelte file for ssr.
  * @param {string} path
- * @param {Record<string, any>} path
- * @returns {Promise<SSRComponent>}
+ * @param {Record<string, any>} parameters
  */
 async function createResolverFromFileName(path, parameters = {}) {
-  // if (cache.has(path)) {
-  //   return cache.get(path);
-  // }
+  if (cache.has(path)) {
+    return {
+      ...cache.get(path),
+      parameters,
+    };
+  }
 
   const svelteFile = Bun.file(`./www${path}`);
   const javaScriptFileDOM = Bun.file(
@@ -195,7 +198,6 @@ async function createResolverFromFileName(path, parameters = {}) {
 /**
  *
  * @param {Resolver} resolver
- * @param {Record<string, any>} parameters
  */
 function render(resolver) {
   const result = resolver.ssr.render(resolver.parameters);
@@ -220,7 +222,7 @@ function render(resolver) {
     `;
 }
 
-/** @type {Map<string, {ssr:any,dom:string}>} */
+/** @type {Map<string, {ssr:any,src:string,parameters:ecord<string, any>}>} */
 const cache = new Map();
 
 if (await exists(".ssr")) {
@@ -233,7 +235,7 @@ if (exists(".dom")) {
 }
 mkdir(".dom", { recursive: true });
 
-console.log("Launching server at http://127.0.0.1:8080/index.svelte");
+console.log("Launching server at http://127.0.0.1:8080");
 
 const path = `libmain.${suffix}`;
 
@@ -262,18 +264,21 @@ Bun.serve({
       return;
     }
 
-    /** @type {Resolver} */
-    const resolver = await createResolverFromFileName(fileName, {
-      message: lib.symbols.hello(),
-    });
-    if (!resolver) {
+    try {
+      /** @type {Resolver} */
+      const resolver = await createResolverFromFileName(fileName, {
+        message: lib.symbols.hello(),
+      });
+
+      const content = render(resolver);
+      return new Response(content, {
+        headers: {
+          "content-type": "text/html",
+        },
+      });
+    } catch (e) {
+      warn(e);
       return;
     }
-    const content = render(resolver);
-    return new Response(content, {
-      headers: {
-        "content-type": "text/html",
-      },
-    });
   },
 });
