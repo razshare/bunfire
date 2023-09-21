@@ -240,7 +240,7 @@ console.log("Launching server at http://127.0.0.1:8080");
 const path = `libmain.${suffix}`;
 
 const lib = dlopen(path, {
-  hello: {
+  message: {
     args: [],
     returns: "cstring",
   },
@@ -267,7 +267,7 @@ Bun.serve({
     try {
       /** @type {Resolver} */
       const resolver = await createResolverFromFileName(fileName, {
-        message: lib.symbols.hello(),
+        message: lib.symbols.message(),
       });
 
       const content = render(resolver);
