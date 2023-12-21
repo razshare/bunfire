@@ -137,8 +137,8 @@ function findRequestPath(request) {
       .slice(1)
       .join("/");
 
-  if (path === "/") {
-    return "/index.svelte";
+  if (path === "") {
+    return "/";
   }
 
   return path;
@@ -177,11 +177,11 @@ async function createResolverFromFileName(path, parameters = {}) {
   });
 
   // ---- saving .ssr ----
-  await bundle(svelteFile.name, "ssr", "./.ssr");
+  await bundle(svelteFile.name, "ssr", dirNameSSR);
 
   // ---- saving .dom ----
   await mkdir(dirname(javaScriptFileDOM.name), { recursive: true });
-  await bundle(svelteFile.name, "dom", "./.dom");
+  await bundle(svelteFile.name, "dom", dirNameDOM);
 
   const resultOfSSR = (await import(javaScriptFileSSR.name)).default;
   const resultOfSRC = path.replace(/\.[^.]+$/, ".js");
@@ -222,7 +222,7 @@ function render(resolver) {
     `;
 }
 
-/** @type {Map<string, {ssr:any,src:string,parameters:ecord<string, any>}>} */
+/** @type {Map<string, {ssr:any,src:string,parameters:Record<string, any>}>} */
 const cache = new Map();
 
 if (await exists(".ssr")) {
@@ -278,7 +278,6 @@ Bun.serve({
       });
     } catch (e) {
       warn(e);
-      return;
     }
   },
 });

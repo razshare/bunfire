@@ -3,7 +3,7 @@
   "module": "index.js",
   "type": "module",
   "scripts": {
-    "build:zig": "zig build-lib src/main.zig -dynamic -OReleaseFast",
+    "build:zig": "zig build-lib lib/main.zig -dynamic -OReleaseFast",
     "start": "bun run build:zig && bun ./index.js"
   },
   "devDependencies": {
